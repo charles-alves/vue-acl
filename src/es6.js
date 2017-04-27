@@ -17,6 +17,49 @@ class Acl {
 			return this.permission == permission
 	}
 
+	createCliLink() {
+		const _this = this;
+		return {
+			name: 'cli-link',
+			props: {
+				to: {
+					type: String,
+					required: true
+				},
+				routerConfig: {
+					type: Object
+				}
+			},
+			methods: {
+				getLinkPermissions (link) {
+					let router = this.$router.resolve(link)
+					if (router) {
+						return router.resolved.meta.permission
+					}
+
+					return null
+				}
+			},
+			computed: {
+				options() {
+					return {
+						props: {
+						...this.routerConfig,
+						to: this.to
+					}}
+				}
+			},
+			render (createElement) {
+				let permissions = this.getLinkPermissions(this.options.props.to)
+
+				if (_this.check(permissions)) {
+					return createElement('router-link', this.options, this.$slots.default)
+				}
+
+				return null
+			}
+		}
+	}
 
 	set router(router) {
 		router.beforeEach((to, from, next) => {
@@ -48,6 +91,8 @@ Acl.install = function(Vue, {router, init}) {
 		else
 			return acl.permission
 	}
+
+	Vue.component('cli-link', acl.createCliLink())
 }
 
 export default Acl
